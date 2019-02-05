@@ -6,3 +6,8 @@ git clone git@github.com:ydenyshchenk/Sparta_CronProfiler.git app/code/Sparta/Cr
 bin/magento module:enable Sparta_CronProfiler
 bin/magento setup:upgrade
 ```
+## Usage
+
+```
+php bin/magento sparta:cron:profile
+```
