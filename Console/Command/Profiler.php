@@ -164,15 +164,16 @@ class Profiler extends Command
         $errors = [];
 
         foreach ($cronJobs as $cronGroup) {
-            foreach ($cronGroup as $cronJob) {
+            foreach ($cronGroup as $cronJobName => $cronJob) {
                 ++$i;
 
-                if (!isset($cronJob['name'])) {
-                    $cronJob['name'] = $cronJob['instance'] . '::' . $cronJob['method'];
-                }
-
                 $jobMicroTimeStart = microtime(true);
-                $this->output->write('[' . $i . '] ' . $cronJob['name'] . ' ... ' , false);
+                $this->output->write('[' . $i . '] ' . $cronJobName . ' ... ' , false);
+
+                if (empty($cronJob['instance'])) {
+                    $this->output->write('has no instance defined', true);
+                    continue;
+                }
 
                 if ($i < $offset) {
                     $this->output->write('skipped', true);
