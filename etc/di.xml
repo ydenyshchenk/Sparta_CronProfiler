@@ -3,7 +3,7 @@
     <type name="Magento\Framework\Console\CommandList">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="urlrewriteRebuildProducts" xsi:type="object">Sparta\CronProfiler\Console\Command\Profiler</item>
+                <item name="cronProfiler" xsi:type="object">Sparta\CronProfiler\Console\Command\Profiler</item>
             </argument>
         </arguments>
     </type>

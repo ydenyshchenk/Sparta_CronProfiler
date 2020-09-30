@@ -22,6 +22,11 @@ class Profiler extends Command
     const INPUT_OFFSET = 'offset';
 
     /**
+     * Mode input key value
+     */
+    const INPUT_CODE = 'code';
+
+    /**
      * @var \Symfony\Component\Console\Helper\ProgressBar
      */
     protected $progressBar;
@@ -71,7 +76,9 @@ class Profiler extends Command
         $this->setName('sparta:cron:profile')
             ->setDescription('Profile Cron Jobs')
             ->addOption(self::INPUT_OFFSET, 'o', InputOption::VALUE_OPTIONAL,
-                'Offset');
+                'Offset')
+            ->addOption(self::INPUT_CODE, 'c', InputOption::VALUE_OPTIONAL,
+                'job_code');
         parent::configure();
     }
 
@@ -150,7 +157,11 @@ class Profiler extends Command
         $offset = 0;
         if ($input->getOption(self::INPUT_OFFSET)) {
             $offset = (int)$input->getOption(self::INPUT_OFFSET);
+        }
 
+        $jobCode = '';
+        if ($input->getOption(self::INPUT_CODE)) {
+            $jobCode = $input->getOption(self::INPUT_CODE);
         }
 
         $globalMicroTimeStart = microtime(true);
@@ -167,8 +178,16 @@ class Profiler extends Command
             foreach ($cronGroup as $cronJobName => $cronJob) {
                 ++$i;
 
+                if (!empty($jobCode) && $jobCode != $cronJobName) {
+                    continue;
+                }
+
                 $jobMicroTimeStart = microtime(true);
                 $this->output->write('[' . $i . '] ' . $cronJobName . ' ... ' , false);
+
+                if (!empty($cronJob['schedule'])) {
+                    $this->output->write('(schedule: ' . $cronJob['schedule'] . ') ' , false);
+                }
 
                 if (empty($cronJob['instance'])) {
                     $this->output->write('has no instance defined', true);
@@ -185,6 +204,16 @@ class Profiler extends Command
                 try {
                     $cronJobInstance = $this->objectManager->get($cronJob['instance']);
                     $cronJobInstance->{$cronJob['method']}($schedule);
+                } catch (\ErrorException $e) {
+                    $errors[] = [
+                        'job_name' => $cronJob['name'],
+                        'job' => $cronJob,
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'code' => $e->getCode(),
+                        'trace' => $e->getTrace()
+                    ];
                 } catch (\Exception $e) {
                     $errors[] = [
                         'job_name' => $cronJob['name'],
@@ -193,8 +222,8 @@ class Profiler extends Command
                         'file' => $e->getFile(),
                         'line' => $e->getLine(),
                         'code' => $e->getCode(),
-                        'trace' => $e->getTrace(),
-                    ];
+                        'trace' => $e->getTrace()
+                    ];//ErrorException
                 } finally {
                     $jobMicroTimeEnd = microtime(true);
                     $jobMicroTimeDiff = $jobMicroTimeEnd - $jobMicroTimeStart;
