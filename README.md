@@ -1,4 +1,4 @@
-# Sparta_ExtendGrid
+# Sparta_CronProfiler
 
 ## Installation
 ```
